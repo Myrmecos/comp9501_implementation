@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HFA and SHFA — a 15-minute talk</title>
+<style>
+  :root {
+    --paper: #f3efe6;
+    --ink: #1c1915;
+    --muted: #5e584f;
+    --line: #d9d1c3;
+    --teal: #0e6b67;
+    --teal-soft: #e5f2f1;
+    --rust: #8d3b2f;
+    --gold: #8a6a3b;
+    --card: #fffdf8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #2a2722; color: var(--ink); }
+  body { font-family: "Segoe UI", Calibri, sans-serif; }
+  .deck { height: 100%; display: grid; place-items: center; }
+  .slide {
+    display: none;
+    width: min(1280px, 96vw);
+    height: min(720px, 90vh);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 28px 48px 50px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  }
+  .slide.active { display: flex; flex-direction: column; }
+  h1 { font-family: Palatino, "Palatino Linotype", Georgia, serif; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin: 0 0 12px; font-size: 46px; }
+  h2 { font-family: Palatino, "Palatino Linotype", Georgia, serif; font-weight: 600; letter-spacing: -0.02em; font-size: 32px; margin: 0 0 12px; line-height: 1.12; }
+  p { margin: 0 0 10px; font-size: 18px; line-height: 1.35; }
+  .kicker { color: var(--teal); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; font-weight: 650; margin-bottom: 12px; }
+  .muted { color: var(--muted); }
+  .footer { position: absolute; left: 56px; right: 56px; bottom: 18px; display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 8px; }
+  ul { margin: 8px 0 0; padding-left: 1.1em; }
+  li { font-size: 18px; line-height: 1.32; margin: 4px 0; }
+  .cols { display: grid; grid-template-columns: 1.15fr .85fr; gap: 28px; align-items: start; min-height: 0; }
+  .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); padding: 14px 16px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; letter-spacing: .04em; text-transform: uppercase; color: var(--teal); }
+  .card p, .card li { font-size: 16px; }
+  code, .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: .92em; }
+  .eq { font-family: Palatino, Georgia, serif; background: var(--card); border-left: 4px solid var(--teal); padding: 8px 12px; margin: 6px 0 10px; font-size: 20px; }
+  .big { font-family: Palatino, Georgia, serif; font-size: 64px; line-height: .95; margin: 0; }
+  .big span { display: block; font-family: "Segoe UI", sans-serif; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .statrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
+  .note { display: none; position: absolute; left: 0; right: 0; bottom: 0; background: #1c1915; color: #f3efe6; padding: 14px 56px 16px; font-size: 15px; line-height: 1.35; }
+  body.show-notes .note { display: block; }
+  body.show-notes .slide { height: min(720px, 86vh); }
+  img.fig { width: 100%; height: 430px; object-fit: contain; background: white; border: 1px solid var(--line); }
+  img.fig.short { height: 390px; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+  .bar { position: fixed; left: 0; top: 0; height: 4px; background: var(--teal); width: 0; }
+  .help { position: fixed; right: 16px; bottom: 10px; color: #c8c0b4; font-size: 12px; }
+  .svgbox { background: var(--card); border: 1px solid var(--line); padding: 8px; }
+  .tag { display: inline-block; padding: 2px 8px; background: var(--teal-soft); color: var(--teal); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+
+<section class="slide active">
+  <div class="kicker">IEEE TPAMI 2014 · 15 minutes</div>
+  <h1>Learning with augmented features for heterogeneous domain adaptation</h1>
+  <p style="font-size:22px; max-width:920px;">Wen Li, Lixin Duan, Dong Xu, Ivor W. Tsang. Heterogeneous Feature Augmentation (HFA) and its semi-supervised extension (SHFA).</p>
+  <p class="muted" style="margin-top:18px;">This talk follows the convex multiple-kernel formulation in the paper, then checks it on the authors' released Amazon → DSLR split.</p>
+  <div class="footer"><span>Li, Duan, Xu, Tsang</span><span>0:00</span></div>
+  <div class="note">Open by naming the claim: when source and target features have different dimensions, augment each domain with a learned common block plus its own original features, and learn that map jointly with an SVM. Say that the next 15 minutes are the algorithm, then one official numerical check. Do not spend time on the old alternating solver.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The problem · about 1 minute</div>
+  <h2>The two domains do not share coordinates</h2>
+  <div class="cols">
+    <div>
+      <p>Ordinary domain adaptation assumes the same features in both domains. Heterogeneous domain adaptation does not. A weight learned on the source cannot be applied to the target, and padding the shorter vector with zeros does not invent a correspondence.</p>
+      <p>The Office experiment makes the mismatch concrete. Amazon images are 800-dimensional SURF histograms. DSLR images are 600-dimensional histograms from a different codebook. There are 31 shared categories, 20 labeled Amazon images per category, and only 3 labeled DSLR images per category.</p>
+    </div>
+    <div class="card">
+      <h3>This split</h3>
+      <table>
+        <tr><th></th><th>Samples</th><th>Dim</th></tr>
+        <tr><td>Amazon source</td><td>620</td><td>800</td></tr>
+        <tr><td>DSLR labeled</td><td>93</td><td>600</td></tr>
+        <tr><td>DSLR test</td><td>405</td><td>600</td></tr>
+      </table>
+      <p style="margin-top:10px;">SHFA also treats those 405 test images as unlabeled target training data. The evaluation is transductive.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Setting</span><span>~1:30</span></div>
+  <div class="note">Emphasize scarcity: three labels per class is why a target-only SVM is weak, and why the source is worth using even though its coordinates differ. Mention that the public release is this one split, not the paper's 20-split average.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The representation · about 1.5 minutes</div>
+  <h2>Augment a common block with the original features</h2>
+  <div class="cols">
+    <div>
+      <p>Daumé's feature replication copies a vector beside itself. That only helps when both copies use the same coordinates. HFA first projects each domain into a common subspace, then builds</p>
+      <div class="eq">φ<sub>s</sub>(x<sup>s</sup>) = [P x<sup>s</sup> ; x<sup>s</sup> ; 0]<br>φ<sub>t</sub>(x<sup>t</sup>) = [Q x<sup>t</sup> ; 0 ; x<sup>t</sup>]</div>
+      <p>Cross-domain similarity can flow only through Px and Qx. Same-domain similarity can still use the original block. P and Q are not a preprocessing step. They are learned with the classifier.</p>
+    </div>
+    <div class="svgbox">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:14px;">
+        <div>
+          <div style="margin-bottom:6px;font-family:Palatino,Georgia,serif;">source, 800-d</div>
+          <div style="background:#e5f2f1;border:1px solid #0e6b67;padding:8px;white-space:nowrap;">P x<sup>s</sup>, common</div>
+          <div style="background:#fff;border:1px solid #1c1915;border-top:0;padding:8px;white-space:nowrap;">x<sup>s</sup>, original</div>
+          <div style="background:#f6f1e8;border:1px solid #8a6a3b;border-top:0;padding:8px;white-space:nowrap;">zeros, length 600</div>
+        </div>
+        <div>
+          <div style="margin-bottom:6px;font-family:Palatino,Georgia,serif;">target, 600-d</div>
+          <div style="background:#e5f2f1;border:1px solid #0e6b67;padding:8px;white-space:nowrap;">Q x<sup>t</sup>, common</div>
+          <div style="background:#f6f1e8;border:1px solid #8a6a3b;border-top:0;padding:8px;white-space:nowrap;">zeros, length 800</div>
+          <div style="background:#fff;border:1px solid #1c1915;border-top:0;padding:8px;white-space:nowrap;">x<sup>t</sup>, original</div>
+        </div>
+      </div>
+      <p style="font-size:14px;margin:12px 0 0;">Same domain matches on the white block. Different domains match only on the teal block.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Equation (1)</span><span>~3:00</span></div>
+  <div class="note">Walk the picture top to bottom. The zeros are alignment, not features. The point of the later algebra is that P and Q never need to be stored: only the Gram matrix they induce.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">From a hard joint problem to MKL · about 1.5 minutes</div>
+  <h2>P and Q collapse into one latent metric</h2>
+  <p>HFA puts the standard SVM hinge on the augmented vectors and constrains the size of P and Q. In the dual, those matrices appear only as P<sup>T</sup>P, P<sup>T</sup>Q, and Q<sup>T</sup>Q. Pack them into one positive semidefinite matrix</p>
+  <div class="eq">H = [P ; Q] [P<sup>T</sup>  Q<sup>T</sup>], &nbsp;&nbsp; tr(H) ≤ λ, &nbsp;&nbsp; kernel X<sup>T</sup>(H + I)X.</div>
+  <div class="cols-3">
+    <div class="card"><h3>1. Drop d<sub>c</sub></h3><p>The common dimension never has to be chosen. The subspace stays latent.</p></div>
+    <div class="card"><h3>2. Kernelize</h3><p>Replace X by K<sup>1/2</sup>. H becomes (n<sub>s</sub>+n<sub>t</sub>) square and no longer grows with 800 or 600.</p></div>
+    <div class="card"><h3>3. Rank-one MKL</h3><p>Write H as a conic combination of hh<sup>T</sup>. Rescaling produces an infinite-kernel learning problem, which is convex.</p></div>
+  </div>
+  <p style="margin-top:14px;">The ICML 2012 precursor alternated an SVM with a semidefinite program in H. That alternation has no global-convergence guarantee. The TPAMI algorithm replaces it with this MKL form. The file <span class="mono">hfa_numpy.py</span> in the workspace implements the alternation, on synthetic data. It is not the published solver.</p>
+  <div class="footer"><span>Equations (6) and (11)</span><span>~4:30</span></div>
+  <div class="note">This is the slide to slow down on. Say "convex" only after the rank-one expansion. If asked why MKL: each rank-one atom builds one base kernel K^{1/2}(λhh^T+I)K^{1/2}, and the combination weights are the MKL variables.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Algorithm 1 · about 1 minute</div>
+  <h2>Cutting plane: add the most violated atom</h2>
+  <div class="cols">
+    <div>
+      <ol>
+        <li>Start from the flat atom h ∝ 1, scaled by √λ.</li>
+        <li>Solve p-norm MKL on the atoms so far. The demo uses p = 1, which is a weighted sum of base kernels inside a C-SVM.</li>
+        <li>The most violated rank-one matrix has a closed form: h ∝ K<sup>1/2</sup>(α ∘ y), then renormalize.</li>
+        <li>Append it and repeat until the MKL objective moves by less than 0.1%, or until 50 rounds.</li>
+      </ol>
+      <p>Each of the 31 categories is a separate one-versus-all model. A test DSLR vector is scored with the target block of the kernel only, then the largest score wins.</p>
+    </div>
+    <div class="card">
+      <h3>Demo parameters</h3>
+      <p>Gaussian kernel. Bandwidth from the mean squared distance, zeros on the diagonal included.</p>
+      <p>C = 1 on every labeled point. λ = 100. Inner MKL loop: at most 100 SVMs, same 0.1% test.</p>
+      <p>Cost quoted in the paper: O(n³ + T L n<sup>2.3</sup>), with n = 713 on this split.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Algorithm 1 and Equation (14)</span><span>~5:40</span></div>
+  <div class="note">Do not derive the KKT conditions. Say the closed form out loud once: the next direction is the kernel square root times the signed dual variables. Mention that several categories hit the 50-iteration cap and others stop early; both are what the release allows.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Using unlabeled DSLR images · about 1.5 minutes</div>
+  <h2>SHFA infers labels while it learns H</h2>
+  <p>The remaining 405 DSLR images are added to the target kernel. Their labels are discrete variables. The loss changes from the hinge to a squared hinge inside ρ-SVM, and a balance constraint keeps the unlabeled positive rate at a prescribed value.</p>
+  <div class="eq">min over y<sup>u</sup> and H &nbsp; of &nbsp; max<sub>α</sub> −½ α<sup>T</sup>(Q<sub>H,y</sub> + D) α, &nbsp; with 1<sup>T</sup>α = 1, α ≥ 0.</div>
+  <div class="cols-3">
+    <div class="card"><h3>Balance</h3><p>The release sets the positive fraction to the true test-set rate for that category. The paper uses this same prior for SHFA and for T-SVM. Individual test labels are not training labels.</p></div>
+    <div class="card"><h3>Relaxation</h3><p>Searching labelings is a mixed-integer program. The convex lower bound mixes many feasible labelings and many rank-one matrices into one coefficient vector d.</p></div>
+    <div class="card"><h3>p = 1.5</h3><p>The demo solves the p-norm extension, not plain 1-norm MKL. Unlabeled points are down-weighted: C<sub>u</sub> = 10<sup>−3</sup>, so their square-hinge penalty stays small.</p></div>
+  </div>
+  <div class="footer"><span>Section 3, Equations (15)–(19)</span><span>~7:20</span></div>
+  <div class="note">Be explicit about the prior. It is the one place a listener can fairly object. The authors disclose it and give the same number to the transductive-SVM baseline. It is not label leakage of the individual y's, but it is more than an unlabeled sample.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Algorithm 2 · about 1 minute</div>
+  <h2>Each round adds one labeling and one atom</h2>
+  <ul>
+    <li>Initialize the unlabeled labels with a ρ-SVM trained on the 3 labeled DSLR images of that category, then clip the signs so the positive rate matches the prior.</li>
+    <li>Build an empirical feature map of (λ+1)K + 11<sup>T</sup> by a matrix square root.</li>
+    <li>The search over labelings is still combinatorial. The paper swaps the Euclidean norm for an ∞-norm, so every feature coordinate yields two candidates: sort unlabeled points by α<sub>i</sub>z<sub>ij</sub> and by its negation, then enforce the rate.</li>
+    <li>Keep the candidate with the largest score, append its h ∝ K<sup>1/2</sup>(α ∘ y), and re-solve p-MKL.</li>
+    <li>At test time the demo divides each binary score by that problem's ρ. Because ρ differs across categories, the division affects the argmax. The reproduction follows the demo.</li>
+  </ul>
+  <div class="footer"><span>Algorithm 2 and the released predict_ifa_semi_kernel.m</span><span>~8:30</span></div>
+  <div class="note">If time is short, skip the infinity-norm sentence and say only: each iteration proposes a new feasible labeling by sorting, then adds the matching rank-one kernel. The division by rho is a demo detail worth one sentence because it changes multiclass ties.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The check we can actually run · about 1 minute</div>
+  <h2>The release is one round, not Table 4</h2>
+  <div class="cols">
+    <div>
+      <p>The authors' repository prints two numbers for this fixed split: HFA <b>0.567901</b> and SHFA <b>0.572842</b>. Full MATLAB is not installed on this machine, only the MATLAB runtime, which cannot execute <span class="mono">demo.m</span>. The solver below is a direct port of <span class="mono">demo.m</span>, <span class="mono">demo_shfa.m</span>, <span class="mono">train_hfa_mkl.m</span>, <span class="mono">train_shfa_pnorm.m</span>, and <span class="mono">sumkernels.cpp</span>, using the same LIBSVM problem each file calls.</p>
+      <p>An RTX 5070 Ti is present. It is not used. Nothing in the official method is a GPU program, and a GPU rewrite would no longer be that method.</p>
+    </div>
+    <div class="card">
+      <h3>Also reported here</h3>
+      <p>SVM trained on the 93 labeled DSLR images only, with the same Gaussian kernel and C = 1. That is the paper's SVM<sub>T</sub> baseline on this split. HeMap, DAMA, ARC-t, the Webcam source, and the two text datasets are not in the release.</p>
+    </div>
+  </div>
+  <div class="footer"><span>matlab_implementation/official_shfa_release</span><span>~9:40</span></div>
+  <div class="note">Say clearly that 0.567901 is 230 correct out of 405, from the authors' README, and that our number is either that or a stated difference. Do not compare against the paper's 20-split mean unless you have the table in front of you; the PDF tables did not extract as text.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Result · about 1 minute</div>
+  <h2>One-versus-all accuracy on 405 DSLR images</h2>
+  <div class="statrow" id="statrow">
+    <div class="card"><p class="big"><span>SVM on DSLR labels</span>56.54%<span style="display:block;font-size:16px;color:#5e584f;margin-top:6px;letter-spacing:0;text-transform:none;font-weight:500">229 / 405</span></p></div>
+    <div class="card"><p class="big"><span>HFA</span>56.54%<span style="display:block;font-size:16px;color:#5e584f;margin-top:6px;letter-spacing:0;text-transform:none;font-weight:500">229 / 405 · author 230 / 405</span></p></div>
+    <div class="card"><p class="big"><span>SHFA, p = 1.5</span>57.28%<span style="display:block;font-size:16px;color:#5e584f;margin-top:6px;letter-spacing:0;text-transform:none;font-weight:500">232 / 405 · author check</span></p></div>
+  </div>
+  <p id="acc-sentence" style="margin-top:14px;">HFA ties the target-only SVM on this split, one image below the authors' HFA printout. SHFA is three images higher, which is the count behind their printed SHFA check.</p>
+  <img class="fig short" style="height:250px;" alt="Zoomed accuracy bar chart" src="../python_implementation/output/figures/overall_accuracy_zoom.png">
+  <div class="footer"><span>Amazon → DSLR, authors' indices</span><span>~11:00</span></div>
+  <div class="note">Read 229, 229, 232 out of 405. HFA is one image short of the authors' 230. Say that the decision function matches the SVM to numerical noise, and the remaining image is the difference between LIBSVM 3.20 and the LIBSVM inside scikit-learn, because MATLAB itself is not installed. SHFA lands on 232, the only count consistent with their printed 0.572842.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Where the accuracy comes from · about 1 minute</div>
+  <h2>Per-class accuracy is uneven, and class sizes differ</h2>
+  <img class="fig" alt="Per-class accuracy" src="../python_implementation/output/figures/per_class_accuracy.png">
+  <div class="footer"><span>Macro detail is in the results note</span><span>~12:10</span></div>
+  <div class="note">Point at a tall class and a short class. Overall accuracy weights categories by how many DSLR test images they have: mobile phone has 28, ruler has 4. A single overall percentage hides that. The support chart is the next slide if someone asks; otherwise mention the range verbally from the results note.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Errors · about 50 seconds</div>
+  <h2>HFA confusion on the 31 Office categories</h2>
+  <img class="fig" alt="HFA confusion matrix" src="../python_implementation/output/figures/confusion_hfa.png">
+  <div class="footer"><span>Rows are true labels, columns are predictions</span><span>~13:10</span></div>
+  <div class="note">Do not read the matrix cell by cell. Say that mass on the diagonal is the correct predictions, and that confusions tend to sit between visually related office objects rather than being uniform. Offer the SHFA matrix in the results note if asked whether unlabeled data changes the error pattern.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">How not to over-read the figure · about 1 minute</div>
+  <h2>Three limits on this number</h2>
+  <div class="cols-3">
+    <div class="card"><h3>One split</h3><p>The paper averages 20 random draws and also reports Webcam → DSLR. The release contains neither the other draws nor Webcam. A one-point move is not a significance test.</p></div>
+    <div class="card"><h3>Transductive prior</h3><p>SHFA sees the test images as unlabeled data, and it is given each category's true positive rate. SVM<sub>T</sub> and HFA do not. The comparison is still the paper's comparison, but it is not an inductive test.</p></div>
+    <div class="card"><h3>Not Table 4</h3><p>Reuters and the sentiment corpus are absent from the code release. The Office mean ± standard deviation in the paper is a different statistic from the one-round printout.</p></div>
+  </div>
+  <p style="margin-top:16px;">What the check does support: with the authors' data, kernel, λ, C, and stopping rule, the convex cutting-plane method runs and lands on the accuracy their demo is written to produce.</p>
+  <div class="footer"><span>Scope</span><span>~14:10</span></div>
+  <div class="note">This is the honesty slide. If the measured HFA accuracy differs from 0.567901, say by how many images and do not call it a reproduction of the printed digit. LIBSVM versions can move a boundary point.</div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Close · through 15:00</div>
+  <h2>What to keep</h2>
+  <ul>
+    <li>Heterogeneous adaptation here means learning a common block, not pretending the original coordinates match.</li>
+    <li>Keeping the original features beside that block is the augmentation. H stores the common block only, and cutting-plane MKL learns it jointly with the SVM.</li>
+    <li>SHFA extends the same atoms with inferred unlabeled labels, a class-prior constraint, and a p-norm of 1.5. On this official split the movement relative to HFA is the quantity the demo was published to show.</li>
+  </ul>
+  <p style="margin-top:18px;">Code and figures: <span class="mono">python_implementation/</span>, <span class="mono">matlab_implementation/</span>, <span class="mono">HFA_SHFA_ALGORITHM.md</span>.</p>
+  <div class="footer"><span>Questions</span><span>15:00</span></div>
+  <div class="note">Stop. Take questions on the prior, on why MKL rather than a deep net, and on why the GPU was idle. A deep net would be a different method and could not be checked against 0.567901.</div>
+</section>
+
+</div>
+<div class="help">← → to move · n notes · t 15:00 timer</div>
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let i = 0;
+function show(k) {
+  i = Math.max(0, Math.min(slides.length - 1, k));
+  slides.forEach((s, j) => s.classList.toggle("active", j === i));
+  document.getElementById("bar").style.width = ((i + 1) / slides.length * 100) + "%";
+  if (location.hash !== "#" + (i + 1)) location.hash = String(i + 1);
+}
+function fromHash() {
+  const n = parseInt(location.hash.replace("#", ""), 10);
+  if (n) show(n - 1);
+}
+document.addEventListener("keydown", (e) => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(i + 1); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); show(i - 1); }
+  else if (e.key === "Home") show(0);
+  else if (e.key === "End") show(slides.length - 1);
+  else if (e.key === "n") document.body.classList.toggle("show-notes");
+  else if (e.key === "t") startTimer();
+});
+let timer = null, left = 15 * 60;
+function startTimer() {
+  if (timer) { clearInterval(timer); timer = null; return; }
+  const help = document.querySelector(".help");
+  timer = setInterval(() => {
+    left = Math.max(0, left - 1);
+    const m = String(Math.floor(left / 60)).padStart(2, "0");
+    const s = String(left % 60).padStart(2, "0");
+    help.textContent = "timer " + m + ":" + s + "  ·  ← → move · n notes · t stop";
+    if (left === 0) clearInterval(timer);
+  }, 1000);
+}
+window.addEventListener("load", fromHash);
+window.addEventListener("hashchange", fromHash);
+
+</script>
+</body>
+</html>
