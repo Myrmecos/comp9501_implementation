@@ -6,10 +6,8 @@ Reproduction of Wen Li, Lixin Duan, Dong Xu, and Ivor W. Tsang, *Learning with A
 
 | Path | Contents |
 |------|----------|
-| `python_implementation/` | Python port, educational NumPy demo, run notes, results & figures |
+| `python_implementation/` | Python port, NumPy demo, run notes, results & figures |
 | `matlab_implementation/` | Authors’ MATLAB release + MATLAB install/run guide |
-| `HFA_SHFA_ALGORITHM.md` | Algorithm note (shared) |
-| `slides/index.html` | 15-minute talk |
 | `.venv/` | Python environment (repo root) |
 
 ## Python (official check)
